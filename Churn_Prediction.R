@@ -4,9 +4,6 @@
 install.packages("dplyr")
 
 #load the library
-library('ggplot2') # visualization
-library('ggthemes') # visualization
-library('scales') # visualization
 library('dplyr') # data manipulation
 
 #set the working directory
@@ -26,12 +23,10 @@ summary(Tele.Test)
 str(Tele.Train)
 str(Tele.Test)
 
-#Bind the data
+#Bind the data Train and Test 
 Tele.Full <- bind_rows(Tele.Train, Tele.Test)
 summary(Tele.Full)
 str(Tele.Full)
-
-
 
 
 #Filling the NA for Number Vmail Msgs with 0 as the customer doenst have a voice mail plan
@@ -39,15 +34,12 @@ Tele.Full[79,]
 Tele.Full[79,]$number.vmail.messages <- 0
 
 #Filling the Mean NA for Total Day Calls
-boxplot(Tele.Full$total.day.calls)
-ggplot(data = Tele.Train, aes(x = factor(churn), y = total.day.calls)) + geom_boxplot()
 mean(Tele.Full$total.day.calls)
 TotDayCall <- Tele.Full[c(-30,-90),8:9]
 mean(TotDayCall$total.day.calls)
 Tele.Full[c(30,90),8] <- 100
 
 #Filling the Mean NA for Total Day Charge based on State
-boxplot(Tele.Full$total.day.charge)
 TotDayCharge <- Tele.Full[,c(1,9,17)]
 mean(TotDayCharge$total.day.charge, na.rm = TRUE)
 
@@ -62,7 +54,6 @@ mean(TotDayChargeOK$total.day.charge, na.rm = TRUE)
 Tele.Full[35,9] <- 30.59
 
 #Total day Charge for NM State
-ggplot(data = Tele.Full[Tele.Full$state=='NM',], aes(x = total.day.charge)) + geom_histogram(bins = 15)
 TotDayChargeNM <- Tele.Full[Tele.Full$state=='NM',c(1,9)]
 mean(TotDayChargeNM$total.day.charge, na.rm = TRUE)
 Tele.Full[73,9] <- 28.92
@@ -157,37 +148,43 @@ mean(Tele.Full[Tele.Full$state=='NM' & Tele.Full$area.code==510,16], na.rm = TRU
 Tele.Full[73,16]
 Tele.Full[73,16] <- 1
 
-#Converting Internation Plan to factors
-Tele.Full$international.plan <- ifelse(Tele.Full$international.plan == 'yes', 1, 0)
-#Tele.Full$international.plan <- as.factor(Tele.Full$international.plan)
-Tele.Full$international.plan <- as.numeric(Tele.Full$international.plan)
-
-#Converting Voice Mail Plan to factors
-Tele.Full$voice.mail.plan <- ifelse(Tele.Full$voice.mail.plan == 'yes', 1, 0)
-#Tele.Full$voice.mail.plan <- as.factor(Tele.Full$voice.mail.plan)
-Tele.Full$voice.mail.plan <- as.numeric(Tele.Full$voice.mail.plan)
-
-#Converting Churn to factors
-Tele.Full$churn <- ifelse(Tele.Full$churn == TRUE, 1, 0)
-
-#Converting State to factor and then numbers
-Tele.Full$state <- as.factor(Tele.Full$state)
-Tele.Full$state <- as.numeric(Tele.Full$state)
-
-#Converting Area Code to factor and then numbers
-Tele.Full$area.code <- as.factor(Tele.Full$area.code)
-Tele.Full$area.code <- as.numeric(Tele.Full$area.code)
-
-#converting Account length to numeric
-Tele.Full$account.length <- as.numeric(Tele.Full$account.length)
+#------------------------------------------------------------------------------------------------------------------------------------------
+# #converting Variables to factors..
+# #Converting Internation Plan to factors
+# Tele.Full$international.plan <- ifelse(Tele.Full$international.plan == 'yes', 1, 0)
+# #Tele.Full$international.plan <- as.factor(Tele.Full$international.plan)
+# Tele.Full$international.plan <- as.numeric(Tele.Full$international.plan)
+# 
+# #Converting Voice Mail Plan to factors
+# Tele.Full$voice.mail.plan <- ifelse(Tele.Full$voice.mail.plan == 'yes', 1, 0)
+# #Tele.Full$voice.mail.plan <- as.factor(Tele.Full$voice.mail.plan)
+# Tele.Full$voice.mail.plan <- as.numeric(Tele.Full$voice.mail.plan)
+# 
+# #Converting Churn to factors
+# Tele.Full$churn <- ifelse(Tele.Full$churn == TRUE, 1, 0)
+# 
+# #Converting State to factor and then numbers
+# Tele.Full$state <- as.factor(Tele.Full$state)
+# Tele.Full$state <- as.numeric(Tele.Full$state)
+# 
+# #Converting Area Code to factor and then numbers
+# Tele.Full$area.code <- as.factor(Tele.Full$area.code)
+# Tele.Full$area.code <- as.numeric(Tele.Full$area.code)
+# 
+# #converting Account length to numeric
+# Tele.Full$account.length <- as.numeric(Tele.Full$account.length)
 #-------------------------------------------------------------------------------------------------------------------------------------
-#TrainTele <- Tele.Full[Tele.Full$churn != 'NA',]
 #Create the Training data
 TrainTele <- Tele.Full[1:2850,]
 summary(TrainTele)
-#Convert the training churn to factor
-#Tele.Train$churn <- as.factor(Tele.Train$churn)
+View(TrainTele)
+#---------------------------------------------------------------------------------------------------------------------------------------
+#Visualisation of the Training Dataset with GGPLOT2
+library('ggplot2') # visualization
+library('ggthemes') # visualization
+library('scales') # visualization
 
+#------------------------------------------------------------------------------------------------------------------------------------
 #Create the Test dataset
 TestTele <- Tele.Full[2851:3333,]
 
@@ -357,10 +354,59 @@ write.csv(TelecomPredicted, file = 'Telecom Churn Logistic Regression.csv', row.
 #------------------------------------------------------------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------------------------------------------------------------
 #Naive Bayes Algorithm Approach to find the churn rate of the telecom Customer
+#Bayesian Theoren
+#used when the dimension of the vairable are high
 install.packages(e1071)
 library('e1071')
 
 tele_nb <- naiveBayes(churn ~ state + account.length + area.code + international.plan +  number.vmail.messages + total.day.calls + total.day.charge +
                         total.eve.calls + total.eve.charge + total.night.calls + total.night.charge + total.intl.calls + total.intl.charge + customer.service.calls, 
-                      data = TrainingData)
+                      data = Tele.Train)
 tele_nb
+
+PredNB <- predict(tele_nb, Tele.Test[,-17], type = "class")
+
+#To get the raw probability data
+PredNB <- predict(tele_nb, Tele.Test[,-17], type = "raw")
+PredNB
+PredNBB <- ifelse(PredNB == TRUE, 1, 0)
+
+#Model Tuning
+#Kappa
+
+
+#Sensitivity
+
+#Specificity
+
+
+#------------------------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------------------------------
+#Decision Tree Algorithm Approach to find the churn rate of the telecom Customer
+
+#Building the Decision Tree
+library(rpart)
+#rpart - recursive partition
+
+Tele_DT <- rpart(churn ~ state + account.length + area.code + international.plan +  number.vmail.messages + total.day.calls + total.day.charge +
+                   total.eve.calls + total.eve.charge + total.night.calls + total.night.charge + total.intl.calls + total.intl.charge + customer.service.calls, 
+                 data = Tele.Train)
+Tele_DT
+
+#plot the Desicion Tree
+plot(Tele_DT, margin = 0.1)
+text(Tele_DT, use.n = TRUE, pretty = TRUE, cex=0.8)
+
+#Predict the Decision Tree
+
+#Confusion Matrix with the Test Dataset
+
+
+#------------------------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------------------------------
+#Random Forest Classiofication Algorithm Approach to find the churn rate of the telecom Customer
+
+#Load the Random Forest Library
+library(randomForest)
+
+Tele_RF <- randomForest(churn ~ ., data = Tele.Train)
